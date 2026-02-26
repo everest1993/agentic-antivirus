@@ -1,0 +1,94 @@
+QWidget {
+    color: #111827;
+}
+
+QLabel#titleLabel {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QLineEdit#chatInput {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 18px;
+    padding: 0 14px;
+}
+
+QPushButton {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 18px;
+    font-weight: 600;
+    padding: 0 14px;
+}
+
+QPushButton:hover {
+    background: #f3f4f6;
+}
+
+QPushButton:pressed {
+    background: #e5e7eb;
+}
+
+QPushButton#addButton {
+    min-width: 36px;
+    max-width: 36px;
+    padding: 0;
+    border-radius: 18px;
+    font-size: 20px;
+}
+
+QPushButton#sendButton {
+    min-width: 36px;
+    background: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+
+QPushButton#sendButton:hover {
+    background: #1f2937;
+}
+
+QPushButton#sendButton:pressed {
+    background: #374151;
+}
+
+QLabel#hintLabel {
+    font-size: 13px;
+}
+
+QPushButton#backButton {
+    min-width: 36px;
+}
+
+QLabel#chatTitle {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+QScrollArea#messagesScroll {
+    border: 1px solid #d1d5db;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+QWidget#messagesContainer {
+    background: transparent;
+}
+
+QLabel#assistantMessage,
+QLabel#userMessage {
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+QLabel#assistantMessage {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+QLabel#userMessage {
+    background: #111827;
+    color: #ffffff;
+}

@@ -1,4 +1,24 @@
+# dataset
 kagglehub
 pandas
 pyarrow
 fastparquet
+
+# model
+tensorflow
+matplotlib
+numpy
+
+# malware feature extraction
+# official EMBER extractor is installed from git (not from PyPI "ember")
+git+https://github.com/elastic/ember.git#egg=ember
+lightgbm
+lief
+
+# assistant
+langchain-core
+langchain-ollama
+langchain-community
+
+# GUI
+PySide6
