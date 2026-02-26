@@ -2,8 +2,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 
-# CHAT_MODEL = "qwen3-vl:latest"
-CHAT_MODEL = "llama3.1:latest"
+CHAT_MODEL = "qwen3-vl:latest"
 
 
 class Assistant:
