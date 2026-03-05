@@ -1,3 +1,6 @@
+"""
+Pulsante QPushButton per inviare messaggi all'assistente
+"""
 from PySide6.QtWidgets import QPushButton
 
 

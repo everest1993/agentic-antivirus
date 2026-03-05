@@ -3,31 +3,21 @@
 Applicazione desktop (PySide6) con due funzionalita principali:
 
 - chat agente locale (tools);
-- classificatore malware su file PE basato su feature EMBER e modello TensorFlow.
+- classificatore malware di file basato su feature EMBER e modello TensorFlow.
+
+## Stato del progetto
+
+Questo progetto e un prototipo sperimentale di antivirus.
+Non e un prodotto finale affidabile o completo e non garantisce protezione reale del sistema.
+Non sostituisce un antivirus/EDR di produzione.
 
 ## Stack tecnico
 
 - Python
 - PySide6 (GUI)
 - TensorFlow + NumPy (modello di classificazione)
-- EMBER feature extractor (`ember` da GitHub Elastic)
+- EMBER feature extractor locale (modulo vendorizzato da `elastic/ember`)
 - LangChain + Ollama (assistant locale)
-
-## Struttura essenziale
-
-```text
-agentic-antivirus/
-├── src/main/python/
-│   ├── app.py
-│   ├── controller/
-│   ├── model/
-│   │   ├── assistant.py
-│   │   ├── feature_extractor.py
-│   │   ├── ml_model.py
-│   │   └── dataset.py
-│   └── view/
-└── requirements.txt
-```
 
 ## Prerequisiti
 
@@ -39,11 +29,12 @@ agentic-antivirus/
 
 ```bash
 git clone https://github.com/everest1993/agentic-antivirus.git
+cd agentic-antivirus
 ```
 
 ## Installazione requirements
 
-Dalla cartella che contiene la repository clonata:
+Dalla root del progetto:
 
 ```bash
 python -m venv .venv
@@ -51,42 +42,65 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Scarica il modello LLM locale:
+Scaricare il modello LLM locale:
 
 ```bash
 ollama pull qwen3-vl:latest
 ```
 
-## Avvio applicazione
+## Training modello malware (prima dell'avvio)
 
-Dalla stessa cartella usata sopra:
+Il modello di classificazione deve essere trainato **prima** di avviare la GUI.
+Il training **non** scarica automaticamente i parquet.
+
+Scaricare manualmente il dataset EMBER v2 da:
+`https://www.kaggle.com/datasets/dhoogla/ember-2018-v2-features`
+
+Posizionare i file parquet in:
+`src/main/python/model/parquet/`
+
+- `train_ember_2018_v2_features.parquet`
+- `test_ember_2018_v2_features.parquet`
+
+Eseguire:
 
 ```bash
-python agentic-antivirus/src/main/python/app.py
+python src/main/python/train_model.py
+```
+
+Questo comando usa i parquet in `src/main/python/model/parquet/` e salva il modello in `saved_models/malware_detector.keras`.
+
+## Avvio applicazione
+
+Dalla stessa root del progetto:
+
+```bash
+python src/main/python/app.py
 ```
 
 La finestra si apre con dimensione iniziale `800x400`.
 
 ## Comportamento del modello malware
 
-All'avvio, `home_controller.Controller` crea il modello con `build_model()`:
+All'avvio, `HomeController` carica il modello con `build_model()`:
 
 - se trova `saved_models/malware_detector.keras` lo carica;
-- altrimenti prova a fare training usando i parquet in `src/main/python/model/parquet/` e poi salva il modello.
+- se non lo trova, solleva errore: prima va eseguito il training manuale.
 
 La predizione e implementata in:
 
 ```python
-Controller.classify_file(file_path=None, threshold=0.5)
+HomeController.classify_file(file_path=None)
 ```
 
 Output:
-- `Potenziale malware (score=...)` se score >= soglia;
-- `File ok (score=...)` altrimenti.
+- `Pericoloso` se score >= 0.65;
+- `Dubbio` se 0.50 <= score < 0.65;
+- `Sicuro` se score < 0.50.
 
-## Miglioramenti previsti
+## Miglioramenti e sviluppi futuri
 
-- esporre la scansione malware direttamente dalla GUI;
-- gestire la chat in thread separato per evitare freeze UI;
-- aggiungere tool reali all'assistente (es. scan file esplicito da prompt).
-- sostituire il modello ML con uno più performante
+- Migliorare il modello di classificazione.
+- Introdurre una gestione completa dei file sospetti: quarantena, ripristino e rimozione definitiva.
+- Aggiungere un flusso HITL (Human-in-the-Loop) per la revisione manuale dei casi con score vicino alla soglia.
+- Estendere la scansione da singolo file a directory (anche ricorsive).

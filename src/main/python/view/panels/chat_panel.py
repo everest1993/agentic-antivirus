@@ -1,33 +1,33 @@
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QScrollArea, QVBoxLayout, QWidget
 
-from view.buttons.add_btn import AddBtn
+from controller.chat_controller import ChatController
 from view.buttons.action_btn import ActionBtn
 
 
 class ChatPanel(QWidget):
     back_requested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, reply_provider=None, parent=None):
         super().__init__(parent)
-        self.reply_provider = None
+        self.controller = ChatController(self, reply_provider=reply_provider)
         self._build_ui()
-        self._bind_events()
+        self.back_button.clicked.connect(self.controller.handle_back_requested)
+        self.send_button.clicked.connect(self.controller.handle_send_message)
+        self.chat_input.returnPressed.connect(self.controller.handle_send_message)
 
 
     def _build_ui(self):
+        self.back_button = ActionBtn("←", "backButton")
+        self.title_label = QLabel("Chat Assistant")
+        self.title_label.setObjectName("chatTitle")
+        self.title_label.setAlignment(Qt.AlignCenter)
+
         top_layout = QHBoxLayout()
         top_layout.setContentsMargins(10, 10, 10, 10)
-
-        self.back_button = ActionBtn("←", "backButton")
-
-        title_label = QLabel("Chat Assistant")
-        title_label.setObjectName("chatTitle")
-        title_label.setAlignment(Qt.AlignCenter)
-
         top_layout.addWidget(self.back_button)
         top_layout.addStretch()
-        top_layout.addWidget(title_label)
+        top_layout.addWidget(self.title_label)
         top_layout.addStretch()
         top_layout.addSpacing(self.back_button.sizeHint().width())
 
@@ -43,20 +43,15 @@ class ChatPanel(QWidget):
         self.messages_layout.addStretch()
         self.messages_scroll.setWidget(messages_container)
 
-        input_layout = QHBoxLayout()
-        input_layout.setContentsMargins(10, 0, 10, 10)
-        input_layout.setSpacing(8)
-
-        self.add_button = AddBtn()
-
         self.chat_input = QLineEdit()
         self.chat_input.setObjectName("chatInput")
         self.chat_input.setPlaceholderText("Scrivi un messaggio...")
         self.chat_input.setMinimumHeight(36)
-
         self.send_button = ActionBtn("→", "sendButton")
 
-        input_layout.addWidget(self.add_button)
+        input_layout = QHBoxLayout()
+        input_layout.setContentsMargins(10, 0, 10, 10)
+        input_layout.setSpacing(8)
         input_layout.addWidget(self.chat_input, 1)
         input_layout.addWidget(self.send_button)
 
@@ -68,37 +63,21 @@ class ChatPanel(QWidget):
         main_layout.addLayout(input_layout)
 
 
-    def _bind_events(self):
-        self.back_button.clicked.connect(self._request_back)
-        self.send_button.clicked.connect(self._send_message)
-        self.chat_input.returnPressed.connect(self._send_message)
+    def open_with_message(self, message: str = ""):
+        text = message.strip()
 
-
-    def open_with_message(self, message: str):
-        self.chat_input.setFocus()
-        if message:
-            self.chat_input.setText(message)
-            self._send_message()
-
-
-    def _request_back(self, _checked=False):
-        self.back_requested.emit()
-
-
-    def _send_message(self, _checked=False):
-        text = self.chat_input.text().strip()
-        if not text:
+        if text:
+            self.chat_input.setText(text)
+            self.controller.handle_send_message()
             return
-
-        self.chat_input.clear()
-        self.add_message(text, is_user=True)
-        self.add_message(self._assistant_reply(text), is_user=False)
+        
+        self.chat_input.setFocus() # intercetta enter
 
 
     def add_message(self, text: str, is_user: bool):
         bubble = QLabel(text)
         bubble.setWordWrap(True)
-        bubble.setMaximumWidth(560)
+        bubble.setMaximumWidth(600)
         bubble.setObjectName("userMessage" if is_user else "assistantMessage")
 
         row_layout = QHBoxLayout()
@@ -114,27 +93,26 @@ class ChatPanel(QWidget):
         row_widget = QWidget()
         row_widget.setLayout(row_layout)
 
-        insert_at = self.messages_layout.count() - 1
-        self.messages_layout.insertWidget(insert_at, row_widget)
-        QTimer.singleShot(0, self._scroll_to_bottom)
+        self.messages_layout.insertWidget(self.messages_layout.count() - 1, row_widget)
+        
+        return bubble
 
 
-    def _assistant_reply(self, _: str) -> str:
-        if self.reply_provider is None:
-            return "Risposta assistente."
-
-        try:
-            response = self.reply_provider(_)
-        except Exception as exc:
-            return f"Errore assistant: {exc}"
-
-        return str(response).strip() or "Non sono in grado di aiutarti o risponderti."
+    def set_input_enabled(self, enabled: bool):
+        self.chat_input.setEnabled(enabled)
+        self.send_button.setEnabled(enabled)
+        
+        if enabled:
+            self.chat_input.setFocus()
 
 
-    def set_reply_provider(self, reply_provider):
-        self.reply_provider = reply_provider
+    def scroll_to_bottom(self):
+        def _apply_scroll():
+            container = self.messages_scroll.widget()
+            if container is not None:
+                container.adjustSize()
 
+            scrollbar = self.messages_scroll.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
 
-    def _scroll_to_bottom(self):
-        scroll_bar = self.messages_scroll.verticalScrollBar()
-        scroll_bar.setValue(scroll_bar.maximum())
+        QTimer.singleShot(0, _apply_scroll)

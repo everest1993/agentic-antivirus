@@ -10,10 +10,8 @@ matplotlib
 numpy
 
 # malware feature extraction
-# official EMBER extractor is installed from git (not from PyPI "ember")
-git+https://github.com/elastic/ember.git#egg=ember
-lightgbm
 lief
+scikit-learn
 
 # assistant
 langchain-core

@@ -1,3 +1,6 @@
+"""
+Pulsante QPushButton per selezionare percorso file
+"""
 from PySide6.QtWidgets import QPushButton
 
 
